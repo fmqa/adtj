@@ -5,11 +5,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-final class IntQuadTreeSetNode<E> {
+import adt.util.QuadNode;
+
+final class IntQuadTreeSetNode<E> extends QuadNode<IntQuadTreeSetNode<E>> {
 	IntQuadTreeSetNode(IntQuadTreeSet<E> owner, IntQuadTreeSetNode<E> parent,
 			int level, int x, int y, int width, int height) {
+		super(parent);
 		this.owner = new WeakReference<IntQuadTreeSet<E>>(owner);
-		this.parent = new WeakReference<IntQuadTreeSetNode<E>>(parent);
 		this.level = level;
 		this.x = x;
 		this.y = y;
@@ -18,65 +20,61 @@ final class IntQuadTreeSetNode<E> {
 	}
 
 	void clear() {
-		nw = null;
-		ne = null;
-		sw = null;
-		se = null;
+		first = null;
+		second = null;
+		third = null;
+		fourth = null;
 		elements.clear();
+	}
+	
+	@Override
+	protected IntQuadTreeSetNode<E> next() {
+		return super.next();
+	}
+	
+	@Override
+	protected IntQuadTreeSetNode<E> previous() {
+		return super.previous();
 	}
 
 	void compact() {
 		for (IntQuadTreeSetNode<E> cursor = this; cursor.elements.isEmpty()
-				&& cursor.parent.get() != null; cursor = cursor.parent.get()) {
-			if (cursor == cursor.parent.get().nw) {
-				cursor.parent.get().nw = null;
-			} else if (cursor == cursor.parent.get().ne) {
-				cursor.parent.get().ne = null;
-			} else if (cursor == cursor.parent.get().sw) {
-				cursor.parent.get().sw = null;
-			} else if (cursor == cursor.parent.get().se) {
-				cursor.parent.get().se = null;
-			}
-			if (cursor.parent.get().nw != null
-					|| cursor.parent.get().ne != null
-					|| cursor.parent.get().sw != null
-					|| cursor.parent.get().se != null) {
-				break;
-			}
+				&& !cursor.isRoot() && cursor.isLeaf(); cursor = cursor.parent.get()) {
+			cursor.unlink();
 		}
 	}
 
 	boolean split() {
-		if (nw == null && ne == null && sw == null && se == null
-				&& level < owner.get().depth) {
-			nw = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x, y,
+		if (isLeaf() && level < owner.get().depth) {
+			first = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x, y,
 					width / 2, height / 2);
-			ne = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x
+			second = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x
 					+ width / 2, y, width / 2, height / 2);
-			sw = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x, y
+			third = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x, y
 					+ height / 2, width / 2, height / 2);
-			se = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x
+			fourth = new IntQuadTreeSetNode<E>(owner.get(), this, level + 1, x
 					+ width / 2, y + height / 2, width / 2, height / 2);
 
 			for (Iterator<E> iterator = elements.iterator(); iterator.hasNext();) {
 				final E e = iterator.next();
-				if (nw.fit(e)) {
-					nw.attach(e);
+				if (first.fit(e)) {
+					first.attach(e);
 					iterator.remove();
-				} else if (ne.fit(e)) {
-					ne.attach(e);
+				} else if (second.fit(e)) {
+					second.attach(e);
 					iterator.remove();
-				} else if (sw.fit(e)) {
-					sw.attach(e);
+				} else if (third.fit(e)) {
+					third.attach(e);
 					iterator.remove();
-				} else if (se.fit(e)) {
-					se.attach(e);
+				} else if (fourth.fit(e)) {
+					fourth.attach(e);
 					iterator.remove();
 				}
 			}
 
 			return true;
 		}
+		
 		return false;
 	}
 
@@ -91,17 +89,17 @@ final class IntQuadTreeSetNode<E> {
 	}
 
 	IntQuadTreeSetNode<E> fitNode(int fx, int fy, int fw, int fh) {
-		if (nw != null && nw.fit(fx, fy, fw, fh)) {
-			return nw.fitNode(fx, fy, fw, fh);
+		if (first != null && first.fit(fx, fy, fw, fh)) {
+			return first.fitNode(fx, fy, fw, fh);
 		}
-		if (ne != null && ne.fit(fx, fy, fw, fh)) {
-			return ne.fitNode(fx, fy, fw, fh);
+		if (second != null && second.fit(fx, fy, fw, fh)) {
+			return second.fitNode(fx, fy, fw, fh);
 		}
-		if (sw != null && sw.fit(fx, fy, fw, fh)) {
-			return sw.fitNode(fx, fy, fw, fh);
+		if (third != null && third.fit(fx, fy, fw, fh)) {
+			return third.fitNode(fx, fy, fw, fh);
 		}
-		if (se != null && se.fit(fx, fy, fw, fh)) {
-			return se.fitNode(fx, fy, fw, fh);
+		if (fourth != null && fourth.fit(fx, fy, fw, fh)) {
+			return fourth.fitNode(fx, fy, fw, fh);
 		}
 		if (fit(fx, fy, fw, fh)) {
 			return this;
@@ -175,17 +173,17 @@ final class IntQuadTreeSetNode<E> {
 			}
 		}
 
-		if (node.nw != null)
-			node.nw.query(node.nw.x, node.nw.y, node.nw.width, node.nw.height,
+		if (node.first != null)
+			node.first.query(node.first.x, node.first.y, node.first.width, node.first.height,
 					results);
-		if (node.ne != null)
-			node.ne.query(node.ne.x, node.ne.y, node.ne.width, node.ne.height,
+		if (node.second != null)
+			node.second.query(node.second.x, node.second.y, node.second.width, node.second.height,
 					results);
-		if (node.sw != null)
-			node.sw.query(node.sw.x, node.sw.y, node.sw.width, node.sw.height,
+		if (node.third != null)
+			node.third.query(node.third.x, node.third.y, node.third.width, node.third.height,
 					results);
-		if (node.se != null)
-			node.se.query(node.se.x, node.se.y, node.se.width, node.se.height,
+		if (node.fourth != null)
+			node.fourth.query(node.fourth.x, node.fourth.y, node.fourth.width, node.fourth.height,
 					results);
 	}
 
@@ -222,18 +220,18 @@ final class IntQuadTreeSetNode<E> {
 			}
 		}
 
-		if (node.nw != null)
-			count += node.nw.detach(node.nw.x, node.nw.y, node.nw.width,
-					node.nw.height);
-		if (node.ne != null)
-			count += node.ne.detach(node.ne.x, node.ne.y, node.ne.width,
-					node.ne.height);
-		if (node.sw != null)
-			count += node.sw.detach(node.sw.x, node.sw.y, node.sw.width,
-					node.sw.height);
-		if (node.se != null)
-			count += node.se.detach(node.se.x, node.se.y, node.se.width,
-					node.se.height);
+		if (node.first != null)
+			count += node.first.detach(node.first.x, node.first.y, node.first.width,
+					node.first.height);
+		if (node.second != null)
+			count += node.second.detach(node.second.x, node.second.y, node.second.width,
+					node.second.height);
+		if (node.third != null)
+			count += node.third.detach(node.third.x, node.third.y, node.third.width,
+					node.third.height);
+		if (node.fourth != null)
+			count += node.fourth.detach(node.fourth.x, node.fourth.y, node.fourth.width,
+					node.fourth.height);
 
 		return count;
 	}
@@ -264,17 +262,17 @@ final class IntQuadTreeSetNode<E> {
 			}
 		}
 
-		if (node.nw != null)
-			node.nw.detach(node.nw.x, node.nw.y, node.nw.width, node.nw.height,
+		if (node.first != null)
+			node.first.detach(node.first.x, node.first.y, node.first.width, node.first.height,
 					results);
-		if (node.ne != null)
-			node.ne.detach(node.ne.x, node.ne.y, node.ne.width, node.ne.height,
+		if (node.second != null)
+			node.second.detach(node.second.x, node.second.y, node.second.width, node.second.height,
 					results);
-		if (node.sw != null)
-			node.sw.detach(node.sw.x, node.sw.y, node.sw.width, node.sw.height,
+		if (node.third != null)
+			node.third.detach(node.third.x, node.third.y, node.third.width, node.third.height,
 					results);
-		if (node.se != null)
-			node.se.detach(node.se.x, node.se.y, node.se.width, node.se.height,
+		if (node.fourth != null)
+			node.fourth.detach(node.fourth.x, node.fourth.y, node.fourth.width, node.fourth.height,
 					results);
 	}
 
@@ -303,18 +301,18 @@ final class IntQuadTreeSetNode<E> {
 			}
 		}
 
-		if (node.nw != null)
-			count += node.nw.count(node.nw.x, node.nw.y, node.nw.width,
-					node.nw.height);
-		if (node.ne != null)
-			count += node.ne.count(node.ne.x, node.ne.y, node.ne.width,
-					node.ne.height);
-		if (node.sw != null)
-			count += node.sw.count(node.sw.x, node.sw.y, node.sw.width,
-					node.sw.height);
-		if (node.se != null)
-			count += node.se.count(node.se.x, node.se.y, node.se.width,
-					node.se.height);
+		if (node.first != null)
+			count += node.first.count(node.first.x, node.first.y, node.first.width,
+					node.first.height);
+		if (node.second != null)
+			count += node.second.count(node.second.x, node.second.y, node.second.width,
+					node.second.height);
+		if (node.third != null)
+			count += node.third.count(node.third.x, node.third.y, node.third.width,
+					node.third.height);
+		if (node.fourth != null)
+			count += node.fourth.count(node.fourth.x, node.fourth.y, node.fourth.width,
+					node.fourth.height);
 
 		return count;
 	}
@@ -325,9 +323,7 @@ final class IntQuadTreeSetNode<E> {
 	}
 
 	final WeakReference<IntQuadTreeSet<E>> owner;
-	final WeakReference<IntQuadTreeSetNode<E>> parent;
 	final int level;
 	final HashSet<E> elements = new HashSet<E>();
 	final int x, y, width, height;
-	IntQuadTreeSetNode<E> nw, ne, sw, se;
 }

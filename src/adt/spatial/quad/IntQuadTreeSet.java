@@ -89,7 +89,7 @@ public class IntQuadTreeSet<E> extends AbstractSet<E> {
 	
 	@Override
 	public Iterator<E> iterator() {
-		return new IntQuadTreeSetIterator<>(root);
+		return new IntQuadTreeSetIterator<E>(root);
 	}
 
 	@Override
