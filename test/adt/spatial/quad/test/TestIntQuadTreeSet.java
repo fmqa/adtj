@@ -38,9 +38,9 @@ public class TestIntQuadTreeSet {
 	public void testAddE() {
 		IntQuadTreeSet<int[]> tree = new IntQuadTreeSet<int[]>(0, 0, 256, 256, new ArrayIntQuad());
 		assertTrue(tree.size() == 0);
-		tree.add(new int[]{5,5,5,5});
+		assertTrue(tree.add(new int[]{5,5,5,5}));
 		assertTrue(tree.size() == 1);
-		tree.add(new int[]{100,100,5,5});
+		assertTrue(tree.add(new int[]{100,100,5,5}));
 		assertTrue(tree.size() == 2);
 	}
 	
@@ -130,7 +130,7 @@ public class TestIntQuadTreeSet {
 		list.add(new int[]{64, 64, 1, 1});
 		list.add(new int[]{68, 68, 1, 1});
 		
-		tree.addAll(list);
+		assertTrue(tree.addAll(list));
 		assertTrue(tree.size() == list.size());
 	}
 	
@@ -163,7 +163,7 @@ public class TestIntQuadTreeSet {
 				list.add(new int[]{j*8,i*8,8,8});
 			}
 		}
-		tree.addAll(list);
+		assertTrue(tree.addAll(list));
 		assertTrue(tree.size() == list.size());
 		
 		for (Iterator<int[]> cursor = tree.iterator(); cursor.hasNext();) {
@@ -195,7 +195,7 @@ public class TestIntQuadTreeSet {
 		IntQuadTreeSet<int[]> tree = new IntQuadTreeSet<int[]>(0, 0, 256, 256, new ArrayIntQuad());
 		for (int i = 0; i < 32; ++i) {
 			for (int j = 0; j < 32; ++j) {
-				tree.add(new int[]{j*8,i*8,8,8});
+				assertTrue(tree.add(new int[]{j*8,i*8,8,8}));
 			}
 		}
 		ArrayList<int[]> results = new ArrayList<int[]>();
@@ -205,13 +205,13 @@ public class TestIntQuadTreeSet {
 		results.clear();
 		tree.query(0, 0, 128, 128, results);
 		for (int[] o : results) {
-			assertTrue(o[0] >= 0 && o[1] >= 0 && o[2] <= 128 && o[3] <= 128);
+			assertTrue(o[0] >= 0 && o[1] >= 0 && o[0] <= 128 && o[1] <= 128 && o[2] == 8 && o[3] == 8);
 		}
 		
 		results.clear();
 		tree.query(128, 128, 128, 128, results);
 		for (int[] o : results) {
-			assertTrue(o[0] >= 128 && o[1] >= 128 && o[2] <= 256 && o[3] <= 256);
+			assertTrue(o[0] >= 128 && o[1] >= 128 && o[0] <= 256 && o[1] <= 256 && o[2] == 8 && o[3] == 8);
 		}
 	}
 	
@@ -220,7 +220,7 @@ public class TestIntQuadTreeSet {
 		IntQuadTreeSet<int[]> tree = new IntQuadTreeSet<int[]>(0, 0, 256, 256, new ArrayIntQuad());
 		for (int i = 0; i < 32; ++i) {
 			for (int j = 0; j < 32; ++j) {
-				tree.add(new int[]{j*8,i*8,8,8});
+				assertTrue(tree.add(new int[]{j*8,i*8,8,8}));
 			}
 		}
 		int oldSize = tree.size();
@@ -263,7 +263,7 @@ public class TestIntQuadTreeSet {
 		IntQuadTreeSet<int[]> tree = new IntQuadTreeSet<int[]>(0, 0, 256, 256, new ArrayIntQuad());
 		for (int i = 0; i < 32; ++i) {
 			for (int j = 0; j < 32; ++j) {
-				tree.add(new int[]{j*8,i*8,8,8});
+				assertTrue(tree.add(new int[]{j*8,i*8,8,8}));
 			}
 		}
 		assertTrue(tree.size(0, 0, 256, 256) == tree.size());
